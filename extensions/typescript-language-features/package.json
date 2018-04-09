@@ -414,7 +414,7 @@
         },
         "typescript.experimental.syntaxFolding": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "%typescript.experimental.syntaxFolding%"
         },
         "javascript.suggestionActions.enabled": {
