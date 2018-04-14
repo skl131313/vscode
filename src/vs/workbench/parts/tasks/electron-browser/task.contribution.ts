@@ -44,7 +44,7 @@ import { IStorageService, StorageScope } from 'vs/platform/storage/common/storag
 import { IProgressService2, IProgressOptions, ProgressLocation } from 'vs/platform/progress/common/progress';
 import { IOpenerService } from 'vs/platform/opener/common/opener';
 import { IWindowService } from 'vs/platform/windows/common/windows';
-import { INotificationService } from 'vs/platform/notification/common/notification';
+import { INotificationService, PromptOption } from 'vs/platform/notification/common/notification';
 import { IDialogService, IConfirmationResult } from 'vs/platform/dialogs/common/dialogs';
 
 import { IModelService } from 'vs/editor/common/services/modelService';
@@ -1167,11 +1167,24 @@ class TaskService implements ITaskService {
 				if (executeResult.kind === TaskExecuteKind.Active) {
 					let active = executeResult.active;
 					if (active.same) {
+						let message;
 						if (active.background) {
-							this.notificationService.info(nls.localize('TaskSystem.activeSame.background', 'The task \'{0}\' is already active and in background mode. To terminate it use \'Terminate Task...\' from the Tasks menu.', Task.getQualifiedLabel(task)));
+							message = nls.localize('TaskSystem.activeSame.background', 'The task \'{0}\' is already active and in background mode.', Task.getQualifiedLabel(task));
 						} else {
-							this.notificationService.info(nls.localize('TaskSystem.activeSame.noBackground', 'The task \'{0}\' is already active. To terminate it use \'Terminate Task...\' from the Tasks menu.', Task.getQualifiedLabel(task)));
+							message = nls.localize('TaskSystem.activeSame.noBackground', 'The task \'{0}\' is already active.', Task.getQualifiedLabel(task));
 						}
+						const choices: PromptOption[] = [nls.localize('terminateTask', "Terminate Task"), nls.localize('restartTask', "Restart Task")];
+
+						this.notificationService.prompt(Severity.Info, message, choices).then(choice => {
+							switch (choice) {
+								case 0 /* Terminate Task */:
+									this.terminate(task);
+									break;
+								case 1 /* Restart Task */:
+									this.restart(task);
+									break;
+							}
+						});
 					} else {
 						throw new TaskError(Severity.Warning, nls.localize('TaskSystem.active', 'There is already a task running. Terminate it first before executing another task.'), TaskErrors.RunningTask);
 					}
